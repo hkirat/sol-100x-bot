@@ -9,6 +9,8 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "@prisma/client": "6.16.2",
+    "@solana/web3.js": "^1.98.4",
     "@types/node-telegram-bot-api": "^0.64.11",
     "node-telegram-bot-api": "^0.66.0",
     "prisma": "^6.16.2",
