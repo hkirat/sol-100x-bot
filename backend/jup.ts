@@ -1,36 +1,44 @@
 import axios from "axios";
 
-const JUP_URl = "https://lite-api.jup.ag"
-
+const JUP_URL = "https://lite-api.jup.ag";
 const SLIPPAGE = 5;
 
-//@params qty - with decimals // 1 SOL => qty: 1000_000_000
-export async function swap(inputMint: string, outputMint: string, qty: number, publicKey: string) {
+// qty with decimals (1 SOL = 1000000000 lamports)
+export async function swap(
+  inputMint: string,
+  outputMint: string,
+  qty: number,
+  publicKey: string
+) {
+  try {
+    const quoteUrl = `${JUP_URL}/swap/v1/quote?inputMint=${inputMint}&outputMint=${outputMint}&amount=${qty}&slippageBps=${SLIPPAGE}&userPublicKey=${publicKey}`;
+    const quoteResponse = await axios.get(quoteUrl, {
+      headers: { Accept: "application/json" },
+      maxBodyLength: Infinity,
+    });
 
-    let quoteConfig = {
-        method: 'get',
-        maxBodyLength: Infinity,
-        url: `${JUP_URl}/swap/v1/quote?inputMint=${inputMint}&outputMint=${outputMint}&amount=${qty}&slippageBps=${SLIPPAGE}&userPublicKey=${publicKey}`,
-        headers: { 
-            'Accept': 'application/json'
-        }
-    };
-  
-    const response = await axios.request(quoteConfig)
-
-    let config = {
-        method: 'post',
-        maxBodyLength: Infinity,
-        url: `https://lite-api.jup.ag/swap/v1/swap`,
-        headers: { 
-        'Content-Type': 'application/json', 
-        'Accept': 'application/json'
+    const swapResponse = await axios.post(
+      `${JUP_URL}/swap/v1/swap`,
+      {
+        quoteResponse: quoteResponse.data,
+        payer: publicKey,
+        userPublicKey: publicKey,
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
         },
-        data : {quoteResponse: response.data, payer: publicKey, userPublicKey: publicKey}
+        maxBodyLength: Infinity,
+      }
+    );
+
+    return {
+      swapTransaction: swapResponse.data.swapTransaction,
+      outAmount: quoteResponse.data.outAmount,
     };
-
-    const swapResponse = await axios.request(config);
-    
-    return swapResponse.data.swapTransaction;
+  } catch (error: any) {
+    console.error("Swap Error:", error.response?.data || error.message);
+    throw error;
+  }
 }
-
