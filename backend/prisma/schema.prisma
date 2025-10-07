@@ -7,6 +7,7 @@
 generator client {
   provider = "prisma-client-js"
   output   = "../generated/prisma"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
 datasource db {
@@ -16,7 +17,22 @@ datasource db {
 
 model Users {
   id            String          @id       @default(uuid())
-  tgUserId      String
+  tgUserId      String          @unique
   publicKey     String
   privateKey    String
+  transactions  TransactionHistory[] 
+}
+
+model TransactionHistory {
+  tId             String    @id @default(uuid())
+  tgUserId        String  
+  timeStamp       DateTime  @default(now())
+  transType       String
+  inputTokenMint  String
+  outputTokenMint String
+  inputAmount     Float
+  status          String
+  explorerLink    String
+  outputAmount    Float
+  user            Users     @relation(fields: [tgUserId], references: [tgUserId])
 }
